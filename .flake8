@@ -1,0 +1,17 @@
+[flake8]
+ignore =
+    # Ignore document error
+    D,
+    # Sometime we should write import statements not at top of file. (e.g) for test coverage
+    E402,
+    # Please visit this link (https://github.com/PyCQA/pycodestyle/issues/498)
+    W503,
+    #Since E203 is not PEP 8 compliant, we should tell Flake8 to ignore these warnings.(from black website)
+    E203,
+    # Currently we are using f string with placeholder in so many places so need to supress this warning
+    # for now, and fix this in a new PR.
+    F541,
+
+
+max-complexity = 11
+max-line-length= 110
