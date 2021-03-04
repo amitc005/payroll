@@ -1,3 +1,84 @@
+# Payroll Application
+
+## Setup Development Environment
+
+### Run the dev environment with Docker.
+
+1. Please refer [Docker Install Doc](https://docs.docker.com/install/) to install the docker
+
+2. Run the docker image via the docker-compose.
+   ```bash
+   docker-compose up -d --build
+   ```
+3. Open browser <http://127.0.0.1:8000/swagger/>. Need to wait for the server is ready.
+4. To see the docker logs to run the following command.
+   ```bash
+   docker logs payroll_web_1
+   ```
+
+### Run development server
+
+1. On Ubuntu system, install the underlying linux packages before installing the python dependencies.
+   ```bash
+   sudo apt-get install build-essential libssl-dev libffi-dev python3-dev
+   ```
+2. Create a virtual environment
+
+   ```bash
+   python3 -m venv env
+   source env/bin/activate
+   ```
+
+3. Make virtual enviorment using pip
+   ```bash
+   pip install -r docker/requirements.txt
+   ```
+4. Run development server
+   ```bash
+   python3 manage.py migrate
+   python3 manage.py runserver
+   ```
+5. Open browser <http://127.0.0.1:8000/swagger/>
+
+### Development tools we are using
+
+To install pre-commit
+
+```bash
+pre-commit install
+```
+
+1. [Pre-commit as Git Pre-commit hooks](https://pre-commit.com/)
+2. [Black as Code Formatter](https://github.com/psf/black)
+3. [Reorder Python Imports as Code formatter](https://github.com/asottile/reorder_python_imports)
+4. [Flake8 as Linker](https://github.com/PyCQA/flake8)
+
+### Useful make utility commands:
+
+1. `make or make run` for creating team monitor docker container.
+2. `make stop` for stopping the team monitor docker container
+3. `make test` for running test inside the team monitor docker container
+4. `make clean` for deleting the team monitor docker container
+
+## Q/A
+
+1. How did you test that your implementation was correct?
+
+   1. I wrote pass and fail test cases for utilities helper functions separately.
+   2. I wrote API specific test cases with different scenarios including pass and fail use cases.
+   3. Considered the test cases where dates like in Feb where end date can be 28th and 29th, added multiple time record entries.
+
+2. If this application was destined for a production environment, what would you add or change?
+
+   1. Before deploying this code into production, I would consider a load testing to check the memory usage pattern for concurrent post requests of different file sizes.
+   2. Django use keeps file in the memory if the file size around 2.5 MB, after exceeding this limit it stores the file in local storage. I would consider adding a file limit constraint in the upload API.
+   3. While performing the API Load Testing, if the minimum response is more than 30 secs, I would consider making this API asynchronous to prevent bottle necking traffic.
+   4. Some assumptions presented for this project are not industry standard approaches such as fixed request fields, values, and file name format. I would consider adding validation checks such as request body structure and correct file name convention.
+
+3. What compromises did you have to make as a result of the time constraints of this challenge?
+
+   I left some validation because of the assumption we considered for this project, I would like to consider to make the job group as database record.
+
 # Wave Software Development Challenge
 
 Applicants for the Full-stack Developer role at Wave must
@@ -154,27 +235,27 @@ We've agreed to build an API with the following endpoints to serve HTTP requests
          {
            employeeId: 1,
            payPeriod: {
-             startDate: "2020-01-01",
-             endDate: "2020-01-15"
+             startDate: '2020-01-01',
+             endDate: '2020-01-15',
            },
-           amountPaid: "$300.00"
+           amountPaid: '$300.00',
          },
          {
            employeeId: 1,
            payPeriod: {
-             startDate: "2020-01-16",
-             endDate: "2020-01-31"
+             startDate: '2020-01-16',
+             endDate: '2020-01-31',
            },
-           amountPaid: "$80.00"
+           amountPaid: '$80.00',
          },
          {
            employeeId: 2,
            payPeriod: {
-             startDate: "2020-01-16",
-             endDate: "2020-01-31"
+             startDate: '2020-01-16',
+             endDate: '2020-01-31',
            },
-           amountPaid: "$90.00"
-         }
+           amountPaid: '$90.00',
+         },
        ];
      }
    }
