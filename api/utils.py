@@ -65,14 +65,17 @@ def update_payroll_record(time_report):
     }
     payroll_row = Payroll.objects.filter(**data).first()
 
+    from api.serializers import PayrollSerializer
+
     if payroll_row:
-        payroll_row.amount += time_report.get_paid_amount()
-        payroll_row.save()
+        data["total_hours"] = payroll_row.total_hours + time_report.hours
+        payroll_serialized = PayrollSerializer(payroll_row, data=data, partial=True)
+        payroll_serialized.is_valid(raise_exception=True)
+        payroll_serialized.save()
     else:
-        data["amount"] = time_report.get_paid_amount()
 
-        from api.serializers import PayrollSerializer
-
+        data["total_hours"] = time_report.hours
+        data["job_group"] = time_report.job_group
         payroll_serialized = PayrollSerializer(data=data)
         payroll_serialized.is_valid(raise_exception=True)
         payroll_serialized.save()

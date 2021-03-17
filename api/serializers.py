@@ -45,6 +45,12 @@ class PayrollSerializer(serializers.ModelSerializer):
     pay_period = serializers.SerializerMethodField()
     amount_paid = serializers.SerializerMethodField()
 
+    JOB_GROUP_A = "A"
+    JOB_GROUP_B = "B"
+
+    HOURLY_PAY = {JOB_GROUP_A: 20, JOB_GROUP_B: 30}
+    OVERTIME_PAY = {JOB_GROUP_A: 10, JOB_GROUP_B: 15}
+
     class Meta:
         model = Payroll
         fields = [
@@ -54,11 +60,13 @@ class PayrollSerializer(serializers.ModelSerializer):
             "pay_period",
             "start_date",
             "end_date",
+            "total_hours",
+            "job_group",
         ]
         extra_kwargs = {
             "start_date": {"write_only": True},
             "end_date": {"write_only": True},
-            "amount": {"write_only": True},
+            "amount": {"read_only": True},
         }
         swagger_schema_fields = {
             "type": openapi.TYPE_OBJECT,
@@ -90,6 +98,39 @@ class PayrollSerializer(serializers.ModelSerializer):
             },
             "required": [],
         }
+
+    def create(self, validated_data):
+        validated_data["amount"] = (
+            validated_data["total_hours"] * self.HOURLY_PAY[validated_data["job_group"]]
+        )
+        if validated_data["total_hours"] > 60:
+            over_time = validated_data["total_hours"] - 60
+            validated_data["amount"] += (
+                over_time * self.OVERTIME_PAY[validated_data["job_group"]]
+            )
+
+        return Payroll.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        current_hours = validated_data["total_hours"] - instance.total_hours
+        validated_data["amount"] = instance.amount
+        validated_data["amount"] += current_hours * self.HOURLY_PAY[instance.job_group]
+
+        if instance.total_hours > 60:
+            validated_data["amount"] += (
+                current_hours * self.OVERTIME_PAY[instance.job_group]
+            )
+
+        elif validated_data["total_hours"] > 60:
+            over_time_hours = (validated_data["total_hours"]) - 60
+            validated_data["amount"] += (
+                over_time_hours * self.OVERTIME_PAY[instance.job_group]
+            )
+
+        instance.total_hours = validated_data["total_hours"]
+        instance.amount = validated_data["amount"]
+        instance.save()
+        return instance
 
     def get_pay_period(self, obj):
         return {"start_date": obj.start_date, "end_date": obj.end_date}

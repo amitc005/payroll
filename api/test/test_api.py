@@ -127,3 +127,35 @@ class TestTimeRecordAPI:
 
         assert total_pay[1] == total_emp_a
         assert total_pay[2] == total_emp_b
+
+    def test_add_time_report_with_over_time_hours(self):
+        file_id = 1
+        file_str = "date,hours worked,employee id,job group"
+
+        file_str += "\n1/11/2016,7.5,1,A"
+        file_str += "\n2/11/2016,7.5,1,A"
+        file_str += "\n3/11/2016,7.5,1,A"
+        file_str += "\n4/11/2016,7.5,1,A"
+        file_str += "\n5/11/2016,7.5,1,A"
+        file_str += "\n6/11/2016,7.5,1,A"
+        file_str += "\n7/11/2016,7.5,1,A"
+        file_str += "\n8/11/2016,7.5,1,A"
+        file_str += "\n9/11/2016,7.5,1,A"
+        file_str += "\n10/11/2016,7.5,1,A"
+        file_str += "\n11/11/2016,7.5,1,A"
+        file_str += "\n12/11/2016,7.5,1,A"
+        file_str += "\n13/11/2016,7.5,1,A"
+        file_str += "\n14/11/2016,7.5,1,A"
+        file_str += "\n15/11/2016,7.5,1,A"
+
+        file_name = self.file_name % file_id
+        with io.BytesIO(file_str.encode()) as upload_file:
+            upload_file.name = file_name
+            response = self.client.post("/time_reports/", data={"file": upload_file})
+            assert response.status_code == HTTPStatus.CREATED
+
+        time_record_set = TimeReport.objects.all()
+        assert len(time_record_set) == 6
+
+        response = self.client.get("/payroll_report/employee_reports", format="json")
+        assert response.status_code == HTTPStatus.OK
