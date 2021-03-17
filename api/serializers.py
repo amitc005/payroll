@@ -1,6 +1,7 @@
 from drf_yasg import openapi
 from rest_framework import serializers
 
+from api.constants import JobGroup
 from api.models import FileIDRecord
 from api.models import Payroll
 from api.models import TimeReport
@@ -44,12 +45,6 @@ class TimeRecordSerializer(serializers.ModelSerializer):
 class PayrollSerializer(serializers.ModelSerializer):
     pay_period = serializers.SerializerMethodField()
     amount_paid = serializers.SerializerMethodField()
-
-    JOB_GROUP_A = "A"
-    JOB_GROUP_B = "B"
-
-    HOURLY_PAY = {JOB_GROUP_A: 20, JOB_GROUP_B: 30}
-    OVERTIME_PAY = {JOB_GROUP_A: 10, JOB_GROUP_B: 15}
 
     class Meta:
         model = Payroll
@@ -101,12 +96,13 @@ class PayrollSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data["amount"] = (
-            validated_data["total_hours"] * self.HOURLY_PAY[validated_data["job_group"]]
+            validated_data["total_hours"]
+            * JobGroup.HOURLY_PAY.value[validated_data["job_group"]]
         )
         if validated_data["total_hours"] > 60:
             over_time = validated_data["total_hours"] - 60
             validated_data["amount"] += (
-                over_time * self.OVERTIME_PAY[validated_data["job_group"]]
+                over_time * JobGroup.OVERTIME_PAY.value[validated_data["job_group"]]
             )
 
         return Payroll.objects.create(**validated_data)
@@ -114,17 +110,19 @@ class PayrollSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         current_hours = validated_data["total_hours"] - instance.total_hours
         validated_data["amount"] = instance.amount
-        validated_data["amount"] += current_hours * self.HOURLY_PAY[instance.job_group]
+        validated_data["amount"] += (
+            current_hours * JobGroup.HOURLY_PAY.value[instance.job_group]
+        )
 
         if instance.total_hours > 60:
             validated_data["amount"] += (
-                current_hours * self.OVERTIME_PAY[instance.job_group]
+                current_hours * JobGroup.OVERTIME_PAY.value[instance.job_group]
             )
 
         elif validated_data["total_hours"] > 60:
             over_time_hours = (validated_data["total_hours"]) - 60
             validated_data["amount"] += (
-                over_time_hours * self.OVERTIME_PAY[instance.job_group]
+                over_time_hours * JobGroup.OVERTIME_PAY.value[instance.job_group]
             )
 
         instance.total_hours = validated_data["total_hours"]

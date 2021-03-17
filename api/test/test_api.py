@@ -155,7 +155,12 @@ class TestTimeRecordAPI:
             assert response.status_code == HTTPStatus.CREATED
 
         time_record_set = TimeReport.objects.all()
-        assert len(time_record_set) == 6
+        assert len(time_record_set) == 15
 
         response = self.client.get("/payroll_report/employee_reports", format="json")
         assert response.status_code == HTTPStatus.OK
+        res_data = response.json()
+        assert "payroll_report" in res_data
+        assert "employee_reports" in res_data["payroll_report"]
+        assert isinstance(res_data["payroll_report"]["employee_reports"], list)
+        assert len(res_data["payroll_report"]["employee_reports"]) == 1
